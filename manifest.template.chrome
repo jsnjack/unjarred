@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "cookie - GONE!",
+  "description": "Monitor evicted cookies in real-time.",
+  "version": "${VERSION}",
+  "icons": {
+    "64": "icons/icon.png"
+  },
+  "permissions": ["cookies", "storage", "sidePanel"],
+  "host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Cookie Gone"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  }
+}

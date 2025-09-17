@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "cookie - GONE!",
+  "description": "Monitor evicted cookies in real-time.",
+  "version": "0.0.0",
+  "icons": {
+    "64": "icons/icon.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{4f2c8b28-93f5-11f0-aaa2-f02f741aae15}",
+      "strict_min_version": "109.0"
+    }
+  },
+  "permissions": ["cookies", "storage"],
+  "host_permissions": ["*://*/*"],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "sidebar_action": {
+    "default_panel": "sidebar.html",
+    "default_title": "Evicted Cookies"
+  },
+  "action": {
+    "default_title": "Cookie Gone"
+  }
+}
