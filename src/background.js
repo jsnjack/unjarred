@@ -1,4 +1,19 @@
 let cookieEvents = [];
+let sidebarPorts = [];
+
+chrome.runtime.onConnect.addListener((port) => {
+    if (port.name === "sidebar") {
+        sidebarPorts.push(port);
+        port.onDisconnect.addListener(() => {
+            sidebarPorts = sidebarPorts.filter(p => p !== port);
+            if (sidebarPorts.length === 0) {
+                cookieEvents = [];
+                chrome.storage.local.set({ cookieEvents: [] });
+                chrome.action.setBadgeText({ text: "" });
+            }
+        });
+    }
+});
 
 function calculateCookieSize(cookie) {
     let size = 0;
@@ -19,6 +34,10 @@ function calculateCookieSize(cookie) {
 }
 
 function cookieChangedHandler(details) {
+    if (sidebarPorts.length === 0) {
+        return;
+    }
+
     console.debug("Cookie changed:", details);
 
     let cause_human = details.cause;
@@ -46,7 +65,6 @@ function cookieChangedHandler(details) {
         };
         cookieEvents.push(event);
         chrome.storage.local.set({ cookieEvents: cookieEvents });
-        chrome.action.setBadgeText({ text: cookieEvents.length.toString() });
     });
 }
 
@@ -55,7 +73,6 @@ chrome.cookies.onChanged.addListener(cookieChangedHandler);
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "reset") {
         cookieEvents = [];
-        chrome.action.setBadgeText({ text: "" });
         chrome.storage.local.set({ cookieEvents: [] }, () => {
             sendResponse({ status: "reset complete" });
         });
