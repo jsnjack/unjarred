@@ -84,6 +84,20 @@ function createEventElement(event) {
         div.appendChild(partitionKey);
     }
 
+    if (event.domainCookieCount) {
+        const domainCount = document.createElement("div");
+        domainCount.className = "domain-cookie-count";
+        domainCount.textContent = `Cookies on this domain: ${event.domainCookieCount}`;
+        div.appendChild(domainCount);
+    }
+
+    if (event.cookieSize) {
+        const cookieSize = document.createElement("div");
+        cookieSize.className = "cookie-size";
+        cookieSize.textContent = `Approx. size: ${event.cookieSize} bytes`;
+        div.appendChild(cookieSize);
+    }
+
     const detailsTrigger = document.createElement("div");
     detailsTrigger.className = "details-trigger";
     detailsTrigger.textContent = "🛈";

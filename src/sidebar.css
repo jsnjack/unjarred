@@ -107,6 +107,18 @@ body {
     font-size: 0.9em;
 }
 
+.event-item .domain-cookie-count {
+    color: #777;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+.event-item .cookie-size {
+    color: #777;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
 .event-item .timestamp {
     color: #999;
     font-size: 0.8em;

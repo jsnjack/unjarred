@@ -1,5 +1,23 @@
 let cookieEvents = [];
 
+function calculateCookieSize(cookie) {
+    let size = 0;
+    if (cookie.name) size += cookie.name.length;
+    if (cookie.value) size += cookie.value.length;
+
+    // Approximate size of attributes in Set-Cookie header
+    let attributes = '';
+    if (cookie.domain) attributes += `domain=${cookie.domain}; `;
+    if (cookie.path) attributes += `path=${cookie.path}; `;
+    if (cookie.expirationDate) attributes += `expires=${new Date(cookie.expirationDate * 1000).toUTCString()}; `;
+    if (cookie.secure) attributes += 'Secure; ';
+    if (cookie.httpOnly) attributes += 'HttpOnly; ';
+    if (cookie.sameSite) attributes += `SameSite=${cookie.sameSite}; `;
+
+    size += new TextEncoder().encode(attributes).length;
+    return size;
+}
+
 function cookieChangedHandler(details) {
     console.debug("Cookie changed:", details);
 
@@ -10,14 +28,26 @@ function cookieChangedHandler(details) {
         cause_human = 'removed';
     }
 
-    const event = {
-        ...details,
-        cause_human: cause_human,
-        timestamp: Date.now()
-    };
-    cookieEvents.push(event);
-    chrome.storage.local.set({ cookieEvents: cookieEvents });
-    chrome.action.setBadgeText({ text: cookieEvents.length.toString() });
+    const query = { domain: details.cookie.domain };
+    if (details.cookie.partitionKey) {
+        query.partitionKey = details.cookie.partitionKey;
+    }
+
+    chrome.cookies.getAll(query, (cookies) => {
+        const domainCookieCount = cookies.length;
+        const cookieSize = calculateCookieSize(details.cookie);
+
+        const event = {
+            ...details,
+            cause_human: cause_human,
+            timestamp: Date.now(),
+            domainCookieCount: domainCookieCount,
+            cookieSize: cookieSize
+        };
+        cookieEvents.push(event);
+        chrome.storage.local.set({ cookieEvents: cookieEvents });
+        chrome.action.setBadgeText({ text: cookieEvents.length.toString() });
+    });
 }
 
 chrome.cookies.onChanged.addListener(cookieChangedHandler);
