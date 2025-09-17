@@ -2,8 +2,6 @@ const nameFilter = document.getElementById("name-filter");
 const domainFilter = document.getElementById("domain-filter");
 const causeFiltersDiv = document.getElementById("cause-filters");
 
-chrome.runtime.connect({ name: "sidebar" });
-
 let allCauses = new Set();
 let activeCauseFilters = new Set();
 let displayedEvents = [];
