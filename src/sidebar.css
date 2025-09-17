@@ -54,6 +54,12 @@ body {
     padding: 10px;
     margin-bottom: 10px;
     position: relative;
+    overflow-wrap: break-word;
+}
+
+.event-item.highlighted {
+    border-color: #007bff;
+    border-width: 5px;
 }
 
 .event-item .cause {
