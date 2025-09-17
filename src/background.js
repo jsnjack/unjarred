@@ -33,6 +33,23 @@ function calculateCookieSize(cookie) {
     return size;
 }
 
+function getEffectiveDomain(domain) {
+    // This is a simplified implementation and does not cover all PSL rules.
+    // For a full implementation, a library would be needed.
+    const parts = domain.split('.');
+    if (parts.length <= 2) {
+        return domain;
+    }
+
+    const twoPartTlds = new Set(['co.uk', 'com.au', 'com.br', 'co.jp', 'co.za', 'co.in']);
+    const lastTwo = parts.slice(-2).join('.');
+    if (twoPartTlds.has(lastTwo) && parts.length > 2) {
+        return parts.slice(-3).join('.');
+    }
+
+    return lastTwo;
+}
+
 function cookieChangedHandler(details) {
     if (sidebarPorts.length === 0) {
         return;
@@ -47,7 +64,9 @@ function cookieChangedHandler(details) {
         cause_human = 'removed';
     }
 
-    const query = { domain: details.cookie.domain };
+    const effectiveDomain = getEffectiveDomain(details.cookie.domain.replace(/^\./, ''));
+    const query = { domain: effectiveDomain };
+    
     if (details.cookie.partitionKey) {
         query.partitionKey = details.cookie.partitionKey;
     }
@@ -64,6 +83,9 @@ function cookieChangedHandler(details) {
             cookieSize: cookieSize
         };
         cookieEvents.push(event);
+        if (cookieEvents.length > 1000) {
+            cookieEvents = cookieEvents.slice(cookieEvents.length - 1000);
+        }
         chrome.storage.local.set({ cookieEvents: cookieEvents });
     });
 }
