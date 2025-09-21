@@ -7,7 +7,7 @@
         <span class="event-counter label-new" title="Number of new cookies">{{ eventCounts.new }}</span>
         <span class="event-counter label-removed" title="Number of removed cookies">{{ eventCounts.removed }}</span>
         <span class="event-counter label-evicted" title="Number of evicted cookies">{{ eventCounts.evicted }}</span>
-        <span class="event-counter label-overwrite" title="Number of overwritten cookies">{{ eventCounts.overwrite
+        <span class="event-counter label-modified" title="Number of overwritten cookies">{{ eventCounts.modified
           }}</span>
       </div>
     </div>
@@ -48,7 +48,7 @@ const eventCounts = computed(() => {
     new: 0,
     removed: 0,
     evicted: 0,
-    overwrite: 0,
+    modified: 0,
   };
   cookieEvents.value.forEach(event => {
     if (counts.hasOwnProperty(event.cause_human)) {
@@ -80,8 +80,8 @@ function getLabelClass(cause) {
       return 'label-removed';
     case 'evicted':
       return 'label-evicted';
-    case 'overwrite':
-      return 'label-overwrite';
+    case 'modified':
+      return 'label-modified';
     default:
       return '';
   }
@@ -236,7 +236,7 @@ onMounted(() => {
   /* Blue */
 }
 
-.label-overwrite {
+.label-modified {
   background-color: #ffc107;
   /* Yellow */
   color: #212529;
