@@ -12,7 +12,7 @@ function getEffectiveDomain(domain) {
 }
 
 function calculateApproxCookieSize(cookie) {
-    return cookieToString(cookie).length;
+    return `${cookie.name || ''}${cookie.value || ''}`.length;
 }
 
 function cookieToString(cookie) {
