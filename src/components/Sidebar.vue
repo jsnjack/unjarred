@@ -34,8 +34,8 @@
               event.sizeOfAllCookiesInJar }} B)</p>
           </div>
           <div class="info-container">
-            <span v-if="copiedTimestamp === event.timestamp" class="copied-message">Copied!</span>
-            <span v-else class="info-icon" @click="copyToClipboard(event)" :title="JSON.stringify(event, null, 2)">
+            <span v-if="copiedId === event.id" class="copied-message">Copied!</span>
+            <span v-else class="info-icon" @click.stop="copyToClipboard(event)" :title="JSON.stringify(event, null, 2)">
               ℹ️
             </span>
           </div>
@@ -49,7 +49,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 const cookieEvents = ref([]);
-const copiedTimestamp = ref(null);
+const copiedId = ref(null);
 const selectedEvents = ref([]);
 const filterText = ref('');
 
@@ -99,10 +99,10 @@ const eventCounts = computed(() => {
 async function copyToClipboard(event) {
   try {
     await navigator.clipboard.writeText(JSON.stringify(event.cookie, null, 2));
-    copiedTimestamp.value = event.timestamp;
+    copiedId.value = event.id;
     setTimeout(() => {
-      if (copiedTimestamp.value === event.timestamp) {
-        copiedTimestamp.value = null;
+      if (copiedId.value === event.id) {
+        copiedId.value = null;
       }
     }, 1500);
   } catch (err) {
@@ -273,9 +273,7 @@ onMounted(() => {
 }
 
 .copied-message {
-  font-size: 12px;
   color: #28a745;
-  font-weight: bold;
 }
 
 .label {
