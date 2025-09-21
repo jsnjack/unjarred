@@ -9,26 +9,23 @@ else
 	$(info "Install monova (https://github.com/jsnjack/monova) to calculate version")
 endif
 
-render_manifest_chrome: version
-	VERSION=${VERSION} envsubst < manifest.template.chrome > src/manifest.json
-
-render_manifest_firefox: version
-	VERSION=${VERSION} envsubst < manifest.template.firefox > src/manifest.json
-
-build_firefox: render_manifest_firefox
+build_firefox: version
 	mkdir -p build
 	rm -f build/${NAME}-$(VERSION)_firefox.zip
-	cd src && zip -r ../build/${NAME}-$(VERSION)_firefox.zip *
+	BROWSER=firefox npm run build
+	cd dist && zip -r ../build/${NAME}-$(VERSION)_firefox.zip *
 
-build_chrome: render_manifest_chrome
+build_chrome: version
 	mkdir -p build
 	rm -f build/${NAME}-$(VERSION)_chrome.zip
-	cd src && zip -r ../build/${NAME}-$(VERSION)_chrome.zip *
+	BROWSER=chrome npm run build
+	cd dist && zip -r ../build/${NAME}-$(VERSION)_chrome.zip *
 
 build: build_firefox build_chrome
 
 release: build
 	grm release jsnjack/${NAME} -f ./build/${NAME}-$(VERSION)_chrome.zip -f ./build/${NAME}-$(VERSION)_firefox.zip -t "v`monova`"
 
-run: render_manifest_firefox
-	./node_modules/.bin/web-ext run -s src
+run:
+	BROWSER=firefox npm run build
+	./node_modules/.bin/web-ext run -s dist

@@ -5,12 +5,15 @@ import copy from 'rollup-plugin-copy-watch'
 import execute from 'rollup-plugin-execute'
 import { defineConfig } from 'vite'
 
+// Get browser target from environment variable, default to firefox
+const browser = process.env.BROWSER || 'firefox'
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
         vue(),
         execute([
-            'VERSION=`monova` envsubst < manifest.template.firefox > dist/manifest.json'
+            `VERSION=\`monova\` envsubst < manifest.template.${browser} > dist/manifest.json`
         ], {
             hook: 'writeBundle'
         }),
