@@ -1,42 +1,16 @@
-let cookieEvents = [];
-
-function calculateCookieSize(cookie) {
-    let size = 0;
-    if (cookie.name) size += cookie.name.length;
-    if (cookie.value) size += cookie.value.length;
-
-    // Approximate size of attributes in Set-Cookie header
-    let attributes = '';
-    if (cookie.domain) attributes += `domain=${cookie.domain}; `;
-    if (cookie.path) attributes += `path=${cookie.path}; `;
-    if (cookie.expirationDate) attributes += `expires=${new Date(cookie.expirationDate * 1000).toUTCString()}; `;
-    if (cookie.secure) attributes += 'Secure; ';
-    if (cookie.httpOnly) attributes += 'HttpOnly; ';
-    if (cookie.sameSite) attributes += `SameSite=${cookie.sameSite}; `;
-
-    size += new TextEncoder().encode(attributes).length;
-    return size;
-}
+import psl from 'psl';
 
 function getEffectiveDomain(domain) {
-    // This is a simplified implementation and does not cover all PSL rules.
-    // For a full implementation, a library would be needed.
-    const parts = domain.split('.');
-    if (parts.length <= 2) {
-        return domain;
-    }
-
-    const twoPartTlds = new Set(['co.uk', 'com.au', 'com.br', 'co.jp', 'co.za', 'co.in']);
-    const lastTwo = parts.slice(-2).join('.');
-    if (twoPartTlds.has(lastTwo) && parts.length > 2) {
-        return parts.slice(-3).join('.');
-    }
-
-    return lastTwo;
+    return psl.get(domain);
 }
 
+function calculateCookieSize(cookie) {
+    return (cookie.name || '').length + (cookie.value || '').length;
+}
+
+
 function cookieChangedHandler(details) {
-    console.debug("Cookie changed:", details);
+    console.debug("[background.js] Cookie changed:", details);
 
     let cause_human = details.cause;
     if (details.cause === 'explicit') {
@@ -45,7 +19,7 @@ function cookieChangedHandler(details) {
         cause_human = 'removed';
     }
 
-    const effectiveDomain = getEffectiveDomain(details.cookie.domain.replace(/^\./, ''));
+    const effectiveDomain = getEffectiveDomain(details.cookie.domain);
     const query = { domain: effectiveDomain };
 
     if (details.cookie.partitionKey) {
@@ -63,25 +37,12 @@ function cookieChangedHandler(details) {
             domainCookieCount: domainCookieCount,
             cookieSize: cookieSize
         };
-        cookieEvents.push(event);
-        if (cookieEvents.length > 1000) {
-            cookieEvents = cookieEvents.slice(cookieEvents.length - 1000);
-        }
-        chrome.storage.local.set({ cookieEvents: cookieEvents });
+        console.debug("[background.js] Sending cookie event:", event);
+        browser.runtime.sendMessage({ command: 'cookie-event', data: event });
     });
 }
 
 chrome.cookies.onChanged.addListener(cookieChangedHandler);
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "reset") {
-        cookieEvents = [];
-        chrome.storage.local.set({ cookieEvents: [] }, () => {
-            sendResponse({ status: "reset complete" });
-        });
-        return true; // Indicates that the response is sent asynchronously
-    }
-});
 
 chrome.action.onClicked.addListener(() => {
     chrome.sidebarAction.open();

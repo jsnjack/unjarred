@@ -18,7 +18,7 @@
     "scripts": ["background.js"]
   },
   "sidebar_action": {
-    "default_panel": "sidebar.html",
+    "default_panel": "index.html",
     "default_title": "Evicted Cookies"
   },
   "action": {

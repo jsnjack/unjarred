@@ -1,5 +1,22 @@
 {
+  "name": "cookie_gone",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "open": "web-ext run --source-dir dist/ --target=firefox-desktop",
+    "dev": "vite build --watch",
+    "build": "vite build"
+  },
   "dependencies": {
+    "psl": "^1.15.0",
+    "vue": "^3.3.11"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
+    "rollup-plugin-copy-watch": "^0.0.1",
+    "rollup-plugin-execute": "^1.1.1",
+    "vite": "^5.0.10",
     "web-ext": "^7.4.0"
   }
 }
