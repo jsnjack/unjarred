@@ -13,7 +13,8 @@
       </div>
     </div>
     <div class="event-list">
-      <div v-for="event in cookieEvents" :key="event.timestamp" class="card">
+      <div v-for="event in cookieEvents" :key="event.timestamp" class="card" @click="toggleSelection(event)"
+        :class="{ 'selected': selectedEvents.includes(event.timestamp) }">
         <div class="card-header">
           <p class="cookie-name"><strong>Name:</strong> {{ event.cookie.name }}</p>
           <div :class="['label', getLabelClass(event.cause_human)]">{{ event.cause_human }}</div>
@@ -43,6 +44,19 @@ import { computed, onMounted, ref } from 'vue';
 
 const cookieEvents = ref([]);
 const copiedTimestamp = ref(null);
+const selectedEvents = ref([]);
+
+function toggleSelection(event) {
+  const eventId = event.timestamp;
+  const index = selectedEvents.value.indexOf(eventId);
+  if (index > -1) {
+    selectedEvents.value.splice(index, 1);
+  } else {
+    selectedEvents.value.push(eventId);
+  }
+}
+
+
 
 const eventCounts = computed(() => {
   const counts = {
@@ -93,6 +107,7 @@ function getLabelClass(cause) {
 
 function reset() {
   cookieEvents.value = [];
+  selectedEvents.value = [];
 }
 
 onMounted(() => {
@@ -154,7 +169,15 @@ onMounted(() => {
   position: relative;
   padding-bottom: 30px;
   /* Make space for the footer */
+  cursor: pointer;
 }
+
+.card.selected {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  outline: 1px solid #007bff;
+}
+
 
 .card-header {
   display: flex;
