@@ -48,6 +48,10 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 
+// Cross-browser compatibility
+const isChrome = typeof chrome !== 'undefined' && typeof browser === 'undefined';
+const browserAPI = isChrome ? chrome : browser;
+
 const cookieEvents = ref([]);
 const copiedId = ref(null);
 const selectedEvents = ref([]);
@@ -134,7 +138,7 @@ function reset() {
 }
 
 onMounted(() => {
-  browser.runtime.onMessage.addListener((message) => {
+  browserAPI.runtime.onMessage.addListener((message) => {
     if (message.command === 'cookie-event') {
       cookieEvents.value.unshift(message.data);
     }

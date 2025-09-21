@@ -1,5 +1,9 @@
 import psl from 'psl';
 
+// Cross-browser compatibility
+const isChrome = typeof chrome !== 'undefined' && typeof browser === 'undefined';
+const browserAPI = isChrome ? chrome : browser;
+
 const overwriteCache = new Map();
 const OVERWRITE_CACHE_TTL = 10; // milliseconds
 
@@ -15,10 +19,12 @@ function calculateApproxCookieSize(cookie) {
     return `${cookie.name || ''}${cookie.value || ''}`.length;
 }
 
-function cookieToString(cookie) {
+function cookieToCacheKey(cookie) {
     const parts = [];
-    if (cookie.name || cookie.value) {
-        parts.push(`${cookie.name || ''}=${cookie.value || ''}`);
+    // Value is omitted to better match modified cookies. Firefox uses the same
+    // value for both overwrite and explicit events, Chrome doesn't.
+    if (cookie.name) {
+        parts.push(`${cookie.name || ''}=`);
     }
     if (cookie.domain) {
         parts.push(`domain=${cookie.domain}`);
@@ -56,7 +62,7 @@ function cookieChangedHandler(details) {
     // time and check if a new explicit event arrives shortly after.
     if (details.cause === 'overwrite' && details.removed) {
         // Cache the overwrite event
-        const cacheKey = cookieToString(details.cookie);
+        const cacheKey = cookieToCacheKey(details.cookie);
         overwriteCache.set(cacheKey, Date.now());
         // Schedule cache cleanup
         setTimeout(() => {
@@ -67,7 +73,7 @@ function cookieChangedHandler(details) {
     }
 
     if (details.cause === 'explicit' && !details.removed) {
-        const cacheKey = cookieToString(details.cookie);
+        const cacheKey = cookieToCacheKey(details.cookie);
         if (overwriteCache.has(cacheKey)) {
             cause_human = 'modified';
             overwriteCache.delete(cacheKey);
@@ -85,7 +91,7 @@ function cookieChangedHandler(details) {
         query.partitionKey = details.cookie.partitionKey;
     }
 
-    chrome.cookies.getAll(query, (cookies) => {
+    browserAPI.cookies.getAll(query, (cookies) => {
         const numberOfCookiesInJar = cookies.length;
         const sizeOfAllCookiesInJar = cookies.reduce((acc, cookie) => acc + calculateApproxCookieSize(cookie), 0);
         const cookieSize = calculateApproxCookieSize(details.cookie);
@@ -102,12 +108,18 @@ function cookieChangedHandler(details) {
             cookieSize: cookieSize
         };
         console.debug("[background.js] Sending cookie event:", event);
-        browser.runtime.sendMessage({ command: 'cookie-event', data: event });
+        browserAPI.runtime.sendMessage({ command: 'cookie-event', data: event });
     });
 }
 
-chrome.cookies.onChanged.addListener(cookieChangedHandler);
+browserAPI.cookies.onChanged.addListener(cookieChangedHandler);
 
-chrome.action.onClicked.addListener(() => {
-    chrome.sidebarAction.open();
+browserAPI.action.onClicked.addListener((tab) => {
+    if (isChrome) {
+        // Chrome uses sidePanel API
+        chrome.sidePanel.open({ windowId: tab.windowId });
+    } else {
+        // Firefox uses sidebarAction
+        browserAPI.sidebarAction.open();
+    }
 });
