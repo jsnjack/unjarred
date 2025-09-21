@@ -1,19 +1,25 @@
 <template>
   <div class="sidebar-container">
     <div class="sidebar-header">
-      <button @click="reset">Reset</button>
-      <div class="event-counters">
-        <span class="event-counter" title="Total number of cookie events">Total: {{ cookieEvents.length }}</span>
-        <span class="event-counter label-new" title="Number of new cookies">{{ eventCounts.new }}</span>
-        <span class="event-counter label-removed" title="Number of removed cookies">{{ eventCounts.removed }}</span>
-        <span class="event-counter label-evicted" title="Number of evicted cookies">{{ eventCounts.evicted }}</span>
-        <span class="event-counter label-modified" title="Number of overwritten cookies">{{ eventCounts.modified
-          }}</span>
-        <span class="event-counter label-expired" title="Number of expired cookies">{{ eventCounts.expired }}</span>
+      <div class="header-row">
+        <button @click="reset">Reset</button>
+        <div class="event-counters">
+          <span class="event-counter" title="Total number of cookie events">
+            Total: {{ filteredCookieEvents.length }}
+            <span v-if="filterText">/ {{ cookieEvents.length }}</span>
+          </span>
+          <span class="event-counter label-new" title="Number of new cookies">{{ eventCounts.new }}</span>
+          <span class="event-counter label-removed" title="Number of removed cookies">{{ eventCounts.removed }}</span>
+          <span class="event-counter label-evicted" title="Number of evicted cookies">{{ eventCounts.evicted }}</span>
+          <span class="event-counter label-modified" title="Number of overwritten cookies">{{ eventCounts.modified
+            }}</span>
+          <span class="event-counter label-expired" title="Number of expired cookies">{{ eventCounts.expired }}</span>
+        </div>
       </div>
+      <input type="text" v-model="filterText" placeholder="Filter events..." class="filter-input" />
     </div>
     <div class="event-list">
-      <div v-for="event in cookieEvents" :key="event.id" class="card" @click="toggleSelection(event)"
+      <div v-for="event in filteredCookieEvents" :key="event.id" class="card" @click="toggleSelection(event)"
         :class="{ 'selected': selectedEvents.includes(event.id) }">
         <div class="card-header">
           <p class="cookie-name"><strong>Name:</strong> {{ event.cookie.name }}</p>
@@ -45,6 +51,22 @@ import { computed, onMounted, ref } from 'vue';
 const cookieEvents = ref([]);
 const copiedTimestamp = ref(null);
 const selectedEvents = ref([]);
+const filterText = ref('');
+
+const filteredCookieEvents = computed(() => {
+  if (!filterText.value) {
+    return cookieEvents.value;
+  }
+  const lowerCaseFilter = filterText.value.toLowerCase();
+  return cookieEvents.value.filter(event => {
+    return (
+      event.cookie.name.toLowerCase().includes(lowerCaseFilter) ||
+      event.cookie.domain.toLowerCase().includes(lowerCaseFilter) ||
+      event.cause_human.toLowerCase().includes(lowerCaseFilter)
+    );
+  });
+});
+
 
 function toggleSelection(event) {
   const eventId = event.id;
@@ -108,6 +130,7 @@ function getLabelClass(cause) {
 function reset() {
   cookieEvents.value = [];
   selectedEvents.value = [];
+  filterText.value = '';
 }
 
 onMounted(() => {
@@ -128,18 +151,35 @@ onMounted(() => {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+
+.filter-input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
 .sidebar-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 8px;
   background-color: #ffffff;
   border-bottom: 1px solid #e0e0e0;
   position: sticky;
   top: 0;
   z-index: 1;
-  gap: 10px;
 }
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
 
 .event-counters {
   display: flex;
