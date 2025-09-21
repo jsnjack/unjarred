@@ -1,5 +1,5 @@
 VERSION=0.0.0
-NAME:="cookie_gone"
+NAME:="unjarred"
 MONOVA:=$(shell which monova dot 2> /dev/null)
 
 version:

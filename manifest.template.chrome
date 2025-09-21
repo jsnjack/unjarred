@@ -1,18 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "cookie - GONE!",
-  "description": "Monitor evicted cookies in real-time.",
+  "name": "unjarred",
+  "description": "See what's inside. Monitor cookies in real-time.",
   "version": "${VERSION}",
   "icons": {
     "64": "icons/icon.png"
   },
-  "permissions": ["cookies", "storage", "sidePanel"],
+  "permissions": ["cookies", "sidePanel"],
   "host_permissions": ["*://*/*"],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Cookie Gone"
+    "default_title": "unjarred"
   },
   "side_panel": {
     "default_path": "index.html"

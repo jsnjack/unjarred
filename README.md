@@ -1,4 +1,4 @@
-Cookie - GONE!
+unjarred
 ========
 
-Monitor evicted cookies in real-time.
+See what's inside. Monitor cookies in real-time.
