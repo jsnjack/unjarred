@@ -9,6 +9,7 @@
         <span class="event-counter label-evicted" title="Number of evicted cookies">{{ eventCounts.evicted }}</span>
         <span class="event-counter label-modified" title="Number of overwritten cookies">{{ eventCounts.modified
           }}</span>
+        <span class="event-counter label-expired" title="Number of expired cookies">{{ eventCounts.expired }}</span>
       </div>
     </div>
     <div class="event-list">
@@ -49,6 +50,7 @@ const eventCounts = computed(() => {
     removed: 0,
     evicted: 0,
     modified: 0,
+    expired: 0,
   };
   cookieEvents.value.forEach(event => {
     if (counts.hasOwnProperty(event.cause_human)) {
@@ -82,6 +84,8 @@ function getLabelClass(cause) {
       return 'label-evicted';
     case 'modified':
       return 'label-modified';
+    case 'expired':
+      return 'label-expired';
     default:
       return '';
   }
@@ -240,6 +244,11 @@ onMounted(() => {
   background-color: #ffc107;
   /* Yellow */
   color: #212529;
+}
+
+.label-expired {
+  background-color: #9ba0a5;
+  /* Gray */
 }
 
 button {
