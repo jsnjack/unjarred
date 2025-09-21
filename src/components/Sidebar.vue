@@ -1,35 +1,62 @@
 <template>
-  <div>
-    <div v-for="event in cookieEvents" :key="event.timestamp" class="card">
-      <div class="card-header">
-        <p class="cookie-name"><strong>Name:</strong> {{ event.cookie.name }}</p>
-        <div :class="['label', getLabelClass(event.cause_human)]">{{ event.cause_human }}</div>
+  <div class="sidebar-container">
+    <div class="sidebar-header">
+      <button @click="reset">Reset</button>
+      <div class="event-counters">
+        <span class="event-counter" title="Total number of cookie events">Total: {{ cookieEvents.length }}</span>
+        <span class="event-counter label-new" title="Number of new cookies">{{ eventCounts.new }}</span>
+        <span class="event-counter label-removed" title="Number of removed cookies">{{ eventCounts.removed }}</span>
+        <span class="event-counter label-evicted" title="Number of evicted cookies">{{ eventCounts.evicted }}</span>
+        <span class="event-counter label-overwrite" title="Number of overwritten cookies">{{ eventCounts.overwrite
+          }}</span>
       </div>
-      <div class="card-body">
-        <p><strong>Size:</strong> {{ event.cookieSize }} B</p>
-      </div>
-      <div class="card-footer">
-        <div class="footer-details">
-          <p>🫙 {{ event.cookiejarName }} ({{ event.numberOfCookiesInJar }} 🍪, {{
-            event.sizeOfAllCookiesInJar }} B)</p>
+    </div>
+    <div class="event-list">
+      <div v-for="event in cookieEvents" :key="event.timestamp" class="card">
+        <div class="card-header">
+          <p class="cookie-name"><strong>Name:</strong> {{ event.cookie.name }}</p>
+          <div :class="['label', getLabelClass(event.cause_human)]">{{ event.cause_human }}</div>
         </div>
-        <div class="info-container">
-          <span v-if="copiedTimestamp === event.timestamp" class="copied-message">Copied!</span>
-          <span v-else class="info-icon" @click="copyToClipboard(event)" :title="JSON.stringify(event, null, 2)">
-            ℹ️
-          </span>
+        <div class="card-body">
+          <p><strong>Size:</strong> {{ event.cookieSize }} B</p>
+        </div>
+        <div class="card-footer">
+          <div class="footer-details">
+            <p>🫙 {{ event.cookiejarName }} ({{ event.numberOfCookiesInJar }} 🍪, {{
+              event.sizeOfAllCookiesInJar }} B)</p>
+          </div>
+          <div class="info-container">
+            <span v-if="copiedTimestamp === event.timestamp" class="copied-message">Copied!</span>
+            <span v-else class="info-icon" @click="copyToClipboard(event)" :title="JSON.stringify(event, null, 2)">
+              ℹ️
+            </span>
+          </div>
         </div>
       </div>
     </div>
-    <button @click="reset">Reset</button>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const cookieEvents = ref([]);
 const copiedTimestamp = ref(null);
+
+const eventCounts = computed(() => {
+  const counts = {
+    new: 0,
+    removed: 0,
+    evicted: 0,
+    overwrite: 0,
+  };
+  cookieEvents.value.forEach(event => {
+    if (counts.hasOwnProperty(event.cause_human)) {
+      counts[event.cause_human]++;
+    }
+  });
+  return counts;
+});
 
 async function copyToClipboard(event) {
   try {
@@ -74,9 +101,43 @@ onMounted(() => {
 </script>
 
 <style>
-body {
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   background-color: #f0f2f5;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  gap: 10px;
+}
+
+.event-counters {
+  display: flex;
+  gap: 5px;
+}
+
+.event-counter {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background-color: #eee;
+}
+
+.event-list {
+  overflow-y: auto;
+  flex-grow: 1;
 }
 
 .card {
@@ -182,14 +243,11 @@ body {
 }
 
 button {
-  display: block;
-  width: calc(100% - 16px);
-  margin: 8px;
-  padding: 10px;
+  padding: 8px 12px;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
