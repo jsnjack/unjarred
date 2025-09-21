@@ -92,6 +92,7 @@ function cookieChangedHandler(details) {
 
         const event = {
             ...details,
+            id: crypto.randomUUID(),
             effectiveDomain: effectiveDomain,
             cookiejarName: effectiveDomain + (details.cookie.partitionKey ? ` + ${details.cookie.partitionKey.topLevelSite}` : ''),
             cause_human: cause_human,

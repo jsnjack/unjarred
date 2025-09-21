@@ -13,8 +13,8 @@
       </div>
     </div>
     <div class="event-list">
-      <div v-for="event in cookieEvents" :key="event.timestamp" class="card" @click="toggleSelection(event)"
-        :class="{ 'selected': selectedEvents.includes(event.timestamp) }">
+      <div v-for="event in cookieEvents" :key="event.id" class="card" @click="toggleSelection(event)"
+        :class="{ 'selected': selectedEvents.includes(event.id) }">
         <div class="card-header">
           <p class="cookie-name"><strong>Name:</strong> {{ event.cookie.name }}</p>
           <div :class="['label', getLabelClass(event.cause_human)]">{{ event.cause_human }}</div>
@@ -47,7 +47,7 @@ const copiedTimestamp = ref(null);
 const selectedEvents = ref([]);
 
 function toggleSelection(event) {
-  const eventId = event.timestamp;
+  const eventId = event.id;
   const index = selectedEvents.value.indexOf(eventId);
   if (index > -1) {
     selectedEvents.value.splice(index, 1);
