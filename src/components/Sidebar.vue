@@ -1,9 +1,25 @@
 <template>
   <div>
-    <div v-for="event in cookieEvents" :key="event.timestamp">
-      <h2>{{ event.cookie.domain }}</h2>
-      <p>Cause: {{ event.cause_human }}</p>
-      <p>Name: {{ event.cookie.name }}</p>
+    <div v-for="event in cookieEvents" :key="event.timestamp" class="card">
+      <div class="card-header">
+        <p class="cookie-name"><strong>Name:</strong> {{ event.cookie.name }}</p>
+        <div :class="['label', getLabelClass(event.cause_human)]">{{ event.cause_human }}</div>
+      </div>
+      <div class="card-body">
+        <p><strong>Size:</strong> {{ event.cookieSize }} B</p>
+      </div>
+      <div class="card-footer">
+        <div class="footer-details">
+          <p>🫙 {{ event.cookiejarName }} ({{ event.numberOfCookiesInJar }} 🍪, {{
+            event.sizeOfAllCookiesInJar }} B)</p>
+        </div>
+        <div class="info-container">
+          <span v-if="copiedTimestamp === event.timestamp" class="copied-message">Copied!</span>
+          <span v-else class="info-icon" @click="copyToClipboard(event)" :title="JSON.stringify(event, null, 2)">
+            ℹ️
+          </span>
+        </div>
+      </div>
     </div>
     <button @click="reset">Reset</button>
   </div>
@@ -13,6 +29,36 @@
 import { onMounted, ref } from 'vue';
 
 const cookieEvents = ref([]);
+const copiedTimestamp = ref(null);
+
+async function copyToClipboard(event) {
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(event.cookie, null, 2));
+    copiedTimestamp.value = event.timestamp;
+    setTimeout(() => {
+      if (copiedTimestamp.value === event.timestamp) {
+        copiedTimestamp.value = null;
+      }
+    }, 1500);
+  } catch (err) {
+    console.error('Failed to copy: ', err);
+  }
+}
+
+function getLabelClass(cause) {
+  switch (cause) {
+    case 'new':
+      return 'label-new';
+    case 'removed':
+      return 'label-removed';
+    case 'evicted':
+      return 'label-evicted';
+    case 'overwrite':
+      return 'label-overwrite';
+    default:
+      return '';
+  }
+}
 
 function reset() {
   cookieEvents.value = [];
@@ -20,17 +66,136 @@ function reset() {
 
 onMounted(() => {
   browser.runtime.onMessage.addListener((message) => {
-    console.debug("[Sidebar.vue] Received message:", message);
     if (message.command === 'cookie-event') {
-      cookieEvents.value.push(message.data);
+      cookieEvents.value.unshift(message.data);
     }
   });
 });
 </script>
 
 <style>
-h2 {
-  font-size: 1.2em;
-  margin-top: 1em;
+body {
+  background-color: #f0f2f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  position: relative;
+  padding-bottom: 30px;
+  /* Make space for the footer */
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.cookie-name {
+  word-break: break-all;
+  margin: 0;
+  font-size: 14px;
+}
+
+.card-body p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.card-body p strong {
+  color: #000;
+}
+
+.card-footer {
+  position: absolute;
+  bottom: 4px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-details {
+  text-align: left;
+}
+
+.footer-details p {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.info-container {
+  display: flex;
+  align-items: center;
+}
+
+.info-icon {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.copied-message {
+  font-size: 12px;
+  color: #28a745;
+  font-weight: bold;
+}
+
+.label {
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: white;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: capitalize;
+  flex-shrink: 0;
+}
+
+.label-new {
+  background-color: #28a745;
+  /* Green */
+}
+
+.label-removed {
+  background-color: #dc3545;
+  /* Red */
+}
+
+.label-evicted {
+  background-color: #007bff;
+  /* Blue */
+}
+
+.label-overwrite {
+  background-color: #ffc107;
+  /* Yellow */
+  color: #212529;
+}
+
+button {
+  display: block;
+  width: calc(100% - 16px);
+  margin: 8px;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #0056b3;
 }
 </style>

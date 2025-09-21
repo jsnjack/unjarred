@@ -1,13 +1,39 @@
 import psl from 'psl';
 
 function getEffectiveDomain(domain) {
+    // Remove leading dot if present
+    if (domain.startsWith('.')) {
+        domain = domain.slice(1);
+    }
     return psl.get(domain);
 }
 
-function calculateCookieSize(cookie) {
-    return (cookie.name || '').length + (cookie.value || '').length;
-}
+function calculateApproxCookieSize(cookie) {
+    const parts = [];
+    if (cookie.name || cookie.value) {
+        parts.push(`${cookie.name || ''}=${cookie.value || ''}`);
+    }
+    if (cookie.domain) {
+        parts.push(`domain=${cookie.domain}`);
+    }
+    if (cookie.path) {
+        parts.push(`path=${cookie.path}`);
+    }
+    if (cookie.expirationDate) {
+        parts.push(`expires=${new Date(cookie.expirationDate * 1000).toUTCString()}`);
+    }
+    if (cookie.secure) {
+        parts.push('Secure');
+    }
+    if (cookie.httpOnly) {
+        parts.push('HttpOnly');
+    }
+    if (cookie.sameSite && cookie.sameSite !== 'no_restriction') {
+        parts.push(`SameSite=${cookie.sameSite}`);
+    }
 
+    return parts.join('; ').length;
+}
 
 function cookieChangedHandler(details) {
     console.debug("[background.js] Cookie changed:", details);
@@ -27,14 +53,18 @@ function cookieChangedHandler(details) {
     }
 
     chrome.cookies.getAll(query, (cookies) => {
-        const domainCookieCount = cookies.length;
-        const cookieSize = calculateCookieSize(details.cookie);
+        const numberOfCookiesInJar = cookies.length;
+        const sizeOfAllCookiesInJar = cookies.reduce((acc, cookie) => acc + calculateApproxCookieSize(cookie), 0);
+        const cookieSize = calculateApproxCookieSize(details.cookie);
 
         const event = {
             ...details,
+            effectiveDomain: effectiveDomain,
+            cookiejarName: effectiveDomain + (details.cookie.partitionKey ? ` + ${details.cookie.partitionKey.topLevelSite}` : ''),
             cause_human: cause_human,
             timestamp: Date.now(),
-            domainCookieCount: domainCookieCount,
+            numberOfCookiesInJar: numberOfCookiesInJar,
+            sizeOfAllCookiesInJar: sizeOfAllCookiesInJar,
             cookieSize: cookieSize
         };
         console.debug("[background.js] Sending cookie event:", event);
