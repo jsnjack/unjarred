@@ -568,17 +568,17 @@ button:hover {
 .stats-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .stats-table th {
   background-color: #f8f9fa;
-  padding: 6px 8px;
+  padding: 8px 10px;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
   font-weight: 600;
   color: #495057;
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -605,7 +605,7 @@ button:hover {
 }
 
 .stats-table td {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-bottom: 1px solid #f0f0f0;
   vertical-align: top;
 }
@@ -645,7 +645,7 @@ button:hover {
 
 .httponly-detail {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: #495057;
   font-weight: 500;
   margin-top: 2px;
