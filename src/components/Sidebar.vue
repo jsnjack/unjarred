@@ -8,12 +8,21 @@
             Total: {{ filteredCookieEvents.length }}
             <span v-if="filterText">/ {{ cookieEvents.length }}</span>
           </span>
-          <span class="event-counter label-new" title="Number of new cookies">{{ eventCounts.new }}</span>
-          <span class="event-counter label-removed" title="Number of removed cookies">{{ eventCounts.removed }}</span>
-          <span class="event-counter label-evicted" title="Number of evicted cookies">{{ eventCounts.evicted }}</span>
-          <span class="event-counter label-modified" title="Number of overwritten cookies">{{ eventCounts.modified
+          <span class="event-counter label-new clickable" @click="handleCounterClick('new')"
+            :class="{ active: filterText === 'new' }" title="Number of new cookies - click to filter">{{ eventCounts.new
             }}</span>
-          <span class="event-counter label-expired" title="Number of expired cookies">{{ eventCounts.expired }}</span>
+          <span class="event-counter label-removed clickable" @click="handleCounterClick('removed')"
+            :class="{ active: filterText === 'removed' }" title="Number of removed cookies - click to filter">{{
+            eventCounts.removed }}</span>
+          <span class="event-counter label-evicted clickable" @click="handleCounterClick('evicted')"
+            :class="{ active: filterText === 'evicted' }" title="Number of evicted cookies - click to filter">{{
+            eventCounts.evicted }}</span>
+          <span class="event-counter label-modified clickable" @click="handleCounterClick('modified')"
+            :class="{ active: filterText === 'modified' }" title="Number of overwritten cookies - click to filter">{{
+            eventCounts.modified }}</span>
+          <span class="event-counter label-expired clickable" @click="handleCounterClick('expired')"
+            :class="{ active: filterText === 'expired' }" title="Number of expired cookies - click to filter">{{
+            eventCounts.expired }}</span>
         </div>
       </div>
       <input type="text" v-model="filterText" placeholder="Filter events..." class="filter-input" />
@@ -261,6 +270,16 @@ function handleSort(column) {
   }
 }
 
+function handleCounterClick(cause) {
+  if (filterText.value === cause) {
+    // If already filtering by this cause, clear the filter
+    filterText.value = '';
+  } else {
+    // Set filter to this cause
+    filterText.value = cause;
+  }
+}
+
 onMounted(() => {
   browserAPI.runtime.onMessage.addListener((message) => {
     if (message.command === 'cookie-event') {
@@ -320,6 +339,23 @@ onMounted(() => {
   padding: 3px 6px;
   border-radius: 4px;
   background-color: #eee;
+}
+
+.event-counter.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.event-counter.clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
+}
+
+.event-counter.clickable.active {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 0 4px currentColor;
+  transform: scale(1.05);
 }
 
 .event-list {
