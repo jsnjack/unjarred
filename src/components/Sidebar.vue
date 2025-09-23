@@ -67,6 +67,17 @@
                   <span class="httponly-detail">({{ stats.httpOnlySize }} httponly)</span>
                 </td>
               </tr>
+              <tr v-if="newCookieStatistics.length > 0" class="total-row">
+                <td class="domain-cell total-label">Total</td>
+                <td class="count-cell">
+                  {{ cookieTotals.count }}
+                  <span class="httponly-detail">({{ cookieTotals.httpOnlyCount }} httponly)</span>
+                </td>
+                <td class="size-cell">
+                  {{ cookieTotals.totalSize }}
+                  <span class="httponly-detail">({{ cookieTotals.httpOnlySize }} httponly)</span>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -221,6 +232,21 @@ const newCookieStatistics = computed(() => {
     } else {
       return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
     }
+  });
+});
+
+const cookieTotals = computed(() => {
+  return newCookieStatistics.value.reduce((totals, stats) => {
+    totals.count += stats.count;
+    totals.httpOnlyCount += stats.httpOnlyCount;
+    totals.totalSize += stats.totalSize;
+    totals.httpOnlySize += stats.httpOnlySize;
+    return totals;
+  }, {
+    count: 0,
+    httpOnlyCount: 0,
+    totalSize: 0,
+    httpOnlySize: 0
   });
 });
 
@@ -586,6 +612,21 @@ button:hover {
 
 .stats-table tr:hover {
   background-color: #f8f9fa;
+}
+
+.total-row {
+  border-top: 2px solid #495057 !important;
+  background-color: #e9ecef !important;
+  font-weight: 600;
+}
+
+.total-row:hover {
+  background-color: #e9ecef !important;
+}
+
+.total-label {
+  font-weight: 700 !important;
+  color: #212529 !important;
 }
 
 .domain-cell {
