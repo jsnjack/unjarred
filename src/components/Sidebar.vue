@@ -17,6 +17,51 @@
         </div>
       </div>
       <input type="text" v-model="filterText" placeholder="Filter events..." class="filter-input" />
+      <details class="statistics-details">
+        <summary class="statistics-summary">📊 New cookies summary</summary>
+        <div class="statistics-content">
+          <div v-if="newCookieStatistics.length === 0" class="no-stats">
+            No new cookies to analyze
+          </div>
+          <table v-else class="stats-table">
+            <thead>
+              <tr>
+                <th @click="handleSort('domain')" class="sortable" :class="{ active: sortBy === 'domain' }">
+                  Domain
+                  <span class="sort-indicator" v-if="sortBy === 'domain'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="handleSort('count')" class="sortable" :class="{ active: sortBy === 'count' }">
+                  Cookies
+                  <span class="sort-indicator" v-if="sortBy === 'count'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="handleSort('totalSize')" class="sortable" :class="{ active: sortBy === 'totalSize' }">
+                  Size (B)
+                  <span class="sort-indicator" v-if="sortBy === 'totalSize'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="stats in newCookieStatistics" :key="stats.domain">
+                <td class="domain-cell">{{ stats.domain }}</td>
+                <td class="count-cell">
+                  {{ stats.count }}
+                  <span class="httponly-detail">({{ stats.httpOnlyCount }} httponly)</span>
+                </td>
+                <td class="size-cell">
+                  {{ stats.totalSize }}
+                  <span class="httponly-detail">({{ stats.httpOnlySize }} httponly)</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
     <div class="event-list">
       <div v-for="event in filteredCookieEvents" :key="event.id" class="card" @click="toggleSelection(event)"
@@ -56,6 +101,8 @@ const cookieEvents = ref([]);
 const copiedId = ref(null);
 const selectedEvents = ref([]);
 const filterText = ref('');
+const sortBy = ref('domain');
+const sortDirection = ref('asc');
 
 const filteredCookieEvents = computed(() => {
   if (!filterText.value) {
@@ -100,6 +147,74 @@ const eventCounts = computed(() => {
   return counts;
 });
 
+const newCookieStatistics = computed(() => {
+  const stats = {};
+
+  cookieEvents.value
+    .filter(event => event.cause_human === 'new')
+    .forEach(event => {
+      const domain = event.effectiveDomain || event.cookie.domain;
+      const partitionKey = event.cookie.partitionKey?.topLevelSite || '';
+      const groupKey = partitionKey ? `${domain} + ${partitionKey}` : domain;
+
+      if (!stats[groupKey]) {
+        stats[groupKey] = {
+          domain: groupKey,
+          count: 0,
+          httpOnlyCount: 0,
+          totalSize: 0,
+          httpOnlySize: 0
+        };
+      }
+
+      stats[groupKey].count++;
+      stats[groupKey].totalSize += event.cookieSize || 0;
+
+      if (event.cookie.httpOnly) {
+        stats[groupKey].httpOnlyCount++;
+        stats[groupKey].httpOnlySize += event.cookieSize || 0;
+      }
+    });
+
+  // Convert to array and sort
+  const statsArray = Object.values(stats);
+
+  return statsArray.sort((a, b) => {
+    let aVal, bVal;
+
+    switch (sortBy.value) {
+      case 'domain':
+        aVal = a.domain.toLowerCase();
+        bVal = b.domain.toLowerCase();
+        break;
+      case 'count':
+        aVal = a.count;
+        bVal = b.count;
+        break;
+      case 'httpOnlyCount':
+        aVal = a.httpOnlyCount;
+        bVal = b.httpOnlyCount;
+        break;
+      case 'totalSize':
+        aVal = a.totalSize;
+        bVal = b.totalSize;
+        break;
+      case 'httpOnlySize':
+        aVal = a.httpOnlySize;
+        bVal = b.httpOnlySize;
+        break;
+      default:
+        return 0;
+    }
+
+    if (sortDirection.value === 'asc') {
+      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+    } else {
+      return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+    }
+  });
+});
+
 async function copyToClipboard(event) {
   try {
     await navigator.clipboard.writeText(JSON.stringify(event.cookie, null, 2));
@@ -135,6 +250,15 @@ function reset() {
   cookieEvents.value = [];
   selectedEvents.value = [];
   filterText.value = '';
+}
+
+function handleSort(column) {
+  if (sortBy.value === column) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortDirection.value = 'asc';
+  }
 }
 
 onMounted(() => {
@@ -329,5 +453,125 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+.statistics-details {
+  margin-top: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+}
+
+.statistics-summary {
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #495057;
+  list-style: none;
+  user-select: none;
+}
+
+.statistics-summary::-webkit-details-marker {
+  display: none;
+}
+
+.statistics-summary::before {
+  content: '▶';
+  margin-right: 6px;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.statistics-details[open] .statistics-summary::before {
+  transform: rotate(90deg);
+}
+
+.statistics-content {
+  padding: 8px 10px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.no-stats {
+  font-size: 12px;
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.stats-table th {
+  background-color: #f8f9fa;
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 600;
+  color: #495057;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.stats-table th.sortable:hover {
+  background-color: #e9ecef;
+}
+
+.stats-table th.active {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.sort-indicator {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.stats-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+}
+
+.stats-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.domain-cell {
+  font-weight: 500;
+  color: #212529;
+  word-break: break-all;
+  max-width: 120px;
+}
+
+.count-cell,
+.size-cell {
+  color: #28a745;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.httponly-detail {
+  display: block;
+  font-size: 10px;
+  color: #495057;
+  font-weight: 500;
+  margin-top: 2px;
+  line-height: 1.2;
 }
 </style>
