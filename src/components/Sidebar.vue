@@ -553,8 +553,11 @@ button:hover {
   padding: 8px 10px;
   border-top: 1px solid #e0e0e0;
   background-color: #ffffff;
-  max-height: 200px;
+  max-height: 80vh;
+  min-height: 20vh;
   overflow-y: auto;
+  resize: vertical;
+  border-bottom: 3px solid #dee2e6;
 }
 
 .no-stats {
