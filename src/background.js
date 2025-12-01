@@ -95,6 +95,7 @@ function cookieChangedHandler(details) {
         const numberOfCookiesInJar = cookies.length;
         const sizeOfAllCookiesInJar = cookies.reduce((acc, cookie) => acc + calculateApproxCookieSize(cookie), 0);
         const cookieSize = calculateApproxCookieSize(details.cookie);
+        const cookieNames = cookies.map(c => c.name);
 
         const event = {
             ...details,
@@ -105,7 +106,8 @@ function cookieChangedHandler(details) {
             timestamp: Date.now(),
             numberOfCookiesInJar: numberOfCookiesInJar,
             sizeOfAllCookiesInJar: sizeOfAllCookiesInJar,
-            cookieSize: cookieSize
+            cookieSize: cookieSize,
+            cookieNames: cookieNames
         };
         console.debug("[background.js] Sending cookie event:", event);
         browserAPI.runtime.sendMessage({ command: 'cookie-event', data: event });

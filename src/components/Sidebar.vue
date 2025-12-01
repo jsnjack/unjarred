@@ -99,11 +99,29 @@
               event.sizeOfAllCookiesInJar }} B)</p>
           </div>
           <div class="info-container">
-            <span v-if="copiedId === event.id" class="copied-message">Copied!</span>
-            <span v-else class="info-icon" @click.stop="copyToClipboard(event)" :title="JSON.stringify(event, null, 2)">
+            <span class="info-icon" @click.stop="openModal(event)">
               ℹ️
             </span>
           </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Event Details</h3>
+          <button class="close-button" @click="closeModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-section">
+            <h4>Raw Event Data</h4>
+            <pre>{{ JSON.stringify(sortObjectKeys(selectedEventForModal), null, 2) }}</pre>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="copyToClipboard(selectedEventForModal)">
+            {{ copiedId === selectedEventForModal.id ? 'Copied!' : 'Copy JSON' }}
+          </button>
         </div>
       </div>
     </div>
@@ -123,6 +141,8 @@ const selectedEvents = ref([]);
 const filterText = ref('');
 const sortBy = ref('domain');
 const sortDirection = ref('asc');
+const showModal = ref(false);
+const selectedEventForModal = ref(null);
 
 const filteredCookieEvents = computed(() => {
   if (!filterText.value) {
@@ -138,6 +158,15 @@ const filteredCookieEvents = computed(() => {
   });
 });
 
+function openModal(event) {
+  selectedEventForModal.value = event;
+  showModal.value = true;
+}
+
+function closeModal() {
+  showModal.value = false;
+  selectedEventForModal.value = null;
+}
 
 function toggleSelection(event) {
   const eventId = event.id;
@@ -252,7 +281,7 @@ const cookieTotals = computed(() => {
 
 async function copyToClipboard(event) {
   try {
-    await navigator.clipboard.writeText(JSON.stringify(event.cookie, null, 2));
+    await navigator.clipboard.writeText(JSON.stringify(event, null, 2));
     copiedId.value = event.id;
     setTimeout(() => {
       if (copiedId.value === event.id) {
@@ -304,6 +333,21 @@ function handleCounterClick(cause) {
     // Set filter to this cause
     filterText.value = cause;
   }
+}
+
+function sortObjectKeys(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectKeys);
+  }
+  return Object.keys(obj)
+    .sort()
+    .reduce((result, key) => {
+      result[key] = sortObjectKeys(obj[key]);
+      return result;
+    }, {});
 }
 
 onMounted(() => {
@@ -653,5 +697,102 @@ button:hover {
   font-weight: 500;
   margin-top: 2px;
   line-height: 1.2;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+}
+
+.close-button:hover {
+  color: #000;
+  background: none;
+}
+
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal-section {
+  margin-bottom: 20px;
+}
+
+.modal-section h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+.cookie-names-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cookie-name-tag {
+  background-color: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #495057;
+}
+
+.modal-body pre {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 0;
+}
+
+.modal-footer {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
