@@ -12,8 +12,8 @@
       "strict_min_version": "109.0"
     }
   },
-  "permissions": ["cookies", "scripting", "activeTab"],
-  "host_permissions": ["*://*/*"],
+  "permissions": ["cookies", "scripting", "activeTab", "tabs"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["background.js"]
   },

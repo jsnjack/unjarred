@@ -14,10 +14,12 @@
   },
   "permissions": [
     "cookies",
-    "storage"
+    "scripting",
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
-    "*://*/*"
+    "<all_urls>"
   ],
   "background": {
     "scripts": [

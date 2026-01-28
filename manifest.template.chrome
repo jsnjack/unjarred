@@ -6,8 +6,8 @@
   "icons": {
     "64": "icons/icon.png"
   },
-  "permissions": ["cookies", "sidePanel", "scripting", "activeTab"],
-  "host_permissions": ["*://*/*"],
+  "permissions": ["cookies", "sidePanel", "scripting", "activeTab", "tabs"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },

@@ -115,7 +115,7 @@ function cookieChangedHandler(details) {
 }
 
 // Activate Surfly-specific client-side cookiejar debug logging for the given tab ID
-function activateDebugLogging(tabID) {
+function activateCookiejarDebugLogging(tabID) {
     try {
         browserAPI.scripting.executeScript({
             target: { tabId: tabID, allFrames: true },
@@ -132,10 +132,6 @@ function activateDebugLogging(tabID) {
 
 browserAPI.cookies.onChanged.addListener(cookieChangedHandler);
 
-browserAPI.tabs.onActivated.addListener((activeInfo) => {
-    activateDebugLogging(activeInfo.tabId);
-});
-
 browserAPI.action.onClicked.addListener((tab) => {
     if (isChrome) {
         // Chrome uses sidePanel API
@@ -144,5 +140,17 @@ browserAPI.action.onClicked.addListener((tab) => {
         // Firefox uses sidebarAction
         browserAPI.sidebarAction.open();
     }
-    activateDebugLogging(tab.id);
+    activateCookiejarDebugLogging(tab.id);
+});
+
+browserAPI.tabs.onActivated.addListener((activeInfo) => {
+    activateCookiejarDebugLogging(activeInfo.tabId);
+});
+
+browserAPI.tabs.onUpdated.addListener((tabId) => {
+    activateCookiejarDebugLogging(tabId);
+});
+
+browserAPI.tabs.onCreated.addListener((tab) => {
+    activateCookiejarDebugLogging(tab.id);
 });
