@@ -12,7 +12,7 @@
       "strict_min_version": "109.0"
     }
   },
-  "permissions": ["cookies"],
+  "permissions": ["cookies", "scripting", "activeTab"],
   "host_permissions": ["*://*/*"],
   "background": {
     "scripts": ["background.js"]
