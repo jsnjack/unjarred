@@ -16,7 +16,8 @@
     "cookies",
     "scripting",
     "activeTab",
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "host_permissions": [
     "<all_urls>"

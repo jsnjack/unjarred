@@ -3,27 +3,35 @@
     <div class="sidebar-header">
       <div class="header-row">
         <button @click="reset">Reset</button>
-        <div class="event-counters">
-          <span class="event-counter" title="Total number of cookie events">
-            Total: {{ filteredCookieEvents.length }}
-            <span v-if="filterText">/ {{ cookieEvents.length }}</span>
-          </span>
-          <span class="event-counter label-new clickable" @click="handleCounterClick('new')"
-            :class="{ active: filterText === 'new' }" title="Number of new cookies - click to filter">{{ eventCounts.new
-            }}</span>
-          <span class="event-counter label-removed clickable" @click="handleCounterClick('removed')"
-            :class="{ active: filterText === 'removed' }" title="Number of removed cookies - click to filter">{{
-            eventCounts.removed }}</span>
-          <span class="event-counter label-evicted clickable" @click="handleCounterClick('evicted')"
-            :class="{ active: filterText === 'evicted' }" title="Number of evicted cookies - click to filter">{{
-            eventCounts.evicted }}</span>
-          <span class="event-counter label-modified clickable" @click="handleCounterClick('modified')"
-            :class="{ active: filterText === 'modified' }" title="Number of overwritten cookies - click to filter">{{
-            eventCounts.modified }}</span>
-          <span class="event-counter label-expired clickable" @click="handleCounterClick('expired')"
-            :class="{ active: filterText === 'expired' }" title="Number of expired cookies - click to filter">{{
-            eventCounts.expired }}</span>
+        <div class="toggle-container"
+          title="If enabled, it will set window.__cj_debug = true globally. If disabled, window.__cj_debug = false. Default: do nothing.">
+          <span class="toggle-label">Cookiejar debug logs</span>
+          <label class="switch">
+            <input type="checkbox" :checked="debugLogging === true" @change="toggleDebugLogging">
+            <span class="slider round"></span>
+          </label>
         </div>
+      </div>
+      <div class="event-counters">
+        <span class="event-counter" title="Total number of cookie events">
+          Total: {{ filteredCookieEvents.length }}
+          <span v-if="filterText">/ {{ cookieEvents.length }}</span>
+        </span>
+        <span class="event-counter label-new clickable" @click="handleCounterClick('new')"
+          :class="{ active: filterText === 'new' }" title="Number of new cookies - click to filter">{{ eventCounts.new
+          }}</span>
+        <span class="event-counter label-removed clickable" @click="handleCounterClick('removed')"
+          :class="{ active: filterText === 'removed' }" title="Number of removed cookies - click to filter">{{
+          eventCounts.removed }}</span>
+        <span class="event-counter label-evicted clickable" @click="handleCounterClick('evicted')"
+          :class="{ active: filterText === 'evicted' }" title="Number of evicted cookies - click to filter">{{
+          eventCounts.evicted }}</span>
+        <span class="event-counter label-modified clickable" @click="handleCounterClick('modified')"
+          :class="{ active: filterText === 'modified' }" title="Number of overwritten cookies - click to filter">{{
+          eventCounts.modified }}</span>
+        <span class="event-counter label-expired clickable" @click="handleCounterClick('expired')"
+          :class="{ active: filterText === 'expired' }" title="Number of expired cookies - click to filter">{{
+          eventCounts.expired }}</span>
       </div>
       <input type="text" v-model="filterText" placeholder="Filter events..." class="filter-input" />
       <details class="statistics-details">
@@ -143,6 +151,7 @@ const sortBy = ref('domain');
 const sortDirection = ref('asc');
 const showModal = ref(false);
 const selectedEventForModal = ref(null);
+const debugLogging = ref(null);
 
 const filteredCookieEvents = computed(() => {
   if (!filterText.value) {
@@ -350,13 +359,27 @@ function sortObjectKeys(obj) {
     }, {});
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const data = await browserAPI.storage.local.get('debugLogging');
+    if (data.hasOwnProperty('debugLogging')) {
+      debugLogging.value = data.debugLogging;
+    }
+  } catch (e) {
+    console.error('Failed to load debug logging state:', e);
+  }
+
   browserAPI.runtime.onMessage.addListener((message) => {
     if (message.command === 'cookie-event') {
       cookieEvents.value.unshift(message.data);
     }
   });
 });
+
+function toggleDebugLogging(event) {
+  debugLogging.value = event.target.checked;
+  browserAPI.storage.local.set({ debugLogging: debugLogging.value });
+}
 </script>
 
 <style>
@@ -401,6 +424,8 @@ onMounted(() => {
 .event-counters {
   display: flex;
   gap: 5px;
+  margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 .event-counter {
@@ -794,5 +819,63 @@ button:hover {
   border-top: 1px solid #e0e0e0;
   display: flex;
   justify-content: flex-end;
+}
+
+/* Toggle Switch */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 18px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked+.slider {
+  background-color: #28a745;
+}
+
+input:checked+.slider:before {
+  transform: translateX(14px);
 }
 </style>

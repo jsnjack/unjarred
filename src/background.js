@@ -116,18 +116,26 @@ function cookieChangedHandler(details) {
 
 // Activate Surfly-specific client-side cookiejar debug logging for the given tab ID
 function activateCookiejarDebugLogging(tabID) {
-    try {
-        browserAPI.scripting.executeScript({
-            target: { tabId: tabID, allFrames: true },
-            injectImmediately: true,
-            world: 'MAIN',
-            func: () => {
-                window.__cj_debug = true;
-            }
-        });
-    } catch (e) {
-        console.error("[background.js] Failed to activate debug logging:", e);
-    }
+    browserAPI.storage.local.get('debugLogging', (data) => {
+        if (!data.hasOwnProperty('debugLogging')) {
+            return;
+        }
+        const debugLogging = data.debugLogging;
+
+        try {
+            browserAPI.scripting.executeScript({
+                target: { tabId: tabID, allFrames: true },
+                injectImmediately: true,
+                world: 'MAIN',
+                func: (val) => {
+                    window.__cj_debug = val;
+                },
+                args: [debugLogging]
+            });
+        } catch (e) {
+            console.error("[background.js] Failed to activate debug logging:", e);
+        }
+    });
 }
 
 browserAPI.cookies.onChanged.addListener(cookieChangedHandler);
